@@ -7,10 +7,16 @@ import psutil
 from datetime import datetime
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
+import asyncio
+import subprocess
+from mcrcon import MCRcon
 
 TOKEN = os.getenv("DISCORD_TOKEN")
 API_URL = "https://cheat-collection-qualities-opposite.trycloudflare.com/start-server"
 API_SECRET = "Fuq/Ak6Xm#uq?7xwW0vx20as:UtiGk)Q6m£*(xS%/.8B#Vi8,%"
+RCON_HOST = "whittheboys.servegame.com"
+RCON_PORT = 25575
+RCON_PASSWORD = "[r/4eLTVBOw9cV<[l*(Q£9(omkA`uXwEyTGtfe5`4}]OhfD!>3"
 
 scheduler = AsyncIOScheduler()
 intents = discord.Intents.default()
@@ -50,6 +56,62 @@ async def auto_backup():
     if channel:
         await channel.send("✅ Backup kész! A mentés az iCloud Drive-ban van.")
 
+@bot.command(name="autoleall")
+async def autoleall(ctx):
+    # Csak a tulajdonos használhatja ezt a parancsot
+    if ctx.author.id != 396322349236092930:
+        await ctx.send("🚫 Csak a tulaj használhatja ezt a parancsot.")
+        return
+
+    # Ellenőrizzük, hogy a szerver fut-e
+    if not is_java_running():
+        await ctx.send("ℹ️ A szerver jelenleg nem fut.")
+        return
+
+    # 5 perces figyelmeztetés elküldése
+    await ctx.send("⏰ A szerver leállítási szekvenciája elkezdődött: 5 percen belül leáll!")
+    try:
+        with MCRcon(RCON_HOST, RCON_PASSWORD, port=RCON_PORT) as mcr:
+            mcr.command("say A szerver 5 percen belül leáll!")
+    except Exception as e:
+        await ctx.send(f"❌ Hiba az RCON parancs elküldésekor: {e}")
+        return
+
+    # Várjunk 4 percet (5 perc - 1 perc)
+    await asyncio.sleep(240)
+
+    # 1 perces figyelmeztetés
+    await ctx.send("⏰ 1 perces figyelmeztetés: A szerver 1 perc múlva leáll!")
+    try:
+        with MCRcon(RCON_HOST, RCON_PASSWORD, port=RCON_PORT) as mcr:
+            mcr.command("say A szerver 1 perc múlva leáll!")
+    except Exception as e:
+        await ctx.send(f"❌ Hiba az RCON parancs elküldésekor: {e}")
+        return
+
+    # Várjunk még 50 másodpercet, hogy elérjük az 5 percet
+    await asyncio.sleep(50)
+
+    # Visszaszámlálás 10-től 1-ig
+    for i in range(10, 0, -1):
+        try:
+            with MCRcon(RCON_HOST, RCON_PASSWORD, port=RCON_PORT) as mcr:
+                mcr.command(f"say {i}")
+        except Exception as e:
+            await ctx.send(f"❌ Hiba a visszaszámlálás során: {e}")
+            return
+        await asyncio.sleep(1)
+
+    # Szerver leállítása
+    try:
+        with MCRcon(RCON_HOST, RCON_PASSWORD, port=RCON_PORT) as mcr:
+            mcr.command("stop")
+    except Exception as e:
+        await ctx.send(f"❌ Hiba a szerver leállításakor: {e}")
+        return
+
+    await ctx.send("✅ Szerver leállítva!")
+    
 @bot.command()
 async def command(ctx):
     embed = discord.Embed(
