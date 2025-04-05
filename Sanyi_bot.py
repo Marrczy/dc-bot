@@ -5,7 +5,7 @@ import requests
 
 
 TOKEN = os.getenv("DISCORD_TOKEN")
-API_URL = "https://forecast-remember-titanium-alleged.trycloudflare.com/start-server"
+API_URL = "https://random-name-again.trycloudflare.com/start-server"
 API_SECRET = "Fuq/Ak6Xm#uq?7xwW0vx20as:UtiGk)Q6m£*(xS%/.8B#Vi8,%"
 
 
