@@ -1,7 +1,6 @@
 import os
 import discord
 from discord.ext import commands
-from mcstatus import JavaServer
 
 TOKEN = os.getenv("DISCORD_TOKEN")
 
@@ -9,19 +8,6 @@ intents = discord.Intents.default()
 intents.message_content = True
 
 bot = commands.Bot(command_prefix="!", intents=intents)
-
-@bot.command()
-async def status(ctx):
-    try:
-        server = JavaServer.lookup("withtheboys.servegame.com:25565")
-        status = server.status()
-        await ctx.send(
-            f"🟢 A szerver él!\n"
-            f"🌐 Játékosok: {status.players.online} / {status.players.max}\n"
-            f"💬 MOTD: {status.description['text'] if isinstance(status.description, dict) else status.description}"
-        )
-    except Exception:
-        await ctx.send("🔴 A szerver nem érhető el vagy offline.")
 
 @bot.event
 async def on_ready():
