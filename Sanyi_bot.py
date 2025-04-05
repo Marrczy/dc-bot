@@ -51,7 +51,7 @@ async def auto_backup():
         await channel.send("✅ Backup kész! A mentés az iCloud Drive-ban van.")
 
 @bot.command()
-async def help(ctx):
+async def command(ctx):
     embed = discord.Embed(
         title="🤖 Sanyi – WithTheBoys Discord Bot",
         description="Itt van minden parancsom és funkcióm!",
