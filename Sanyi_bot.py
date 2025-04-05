@@ -51,6 +51,48 @@ async def auto_backup():
         await channel.send("✅ Backup kész! A mentés az iCloud Drive-ban van.")
 
 @bot.command()
+async def help(ctx):
+    embed = discord.Embed(
+        title="🤖 Sanyi – WithTheBoys Discord Bot",
+        description="Itt van minden parancsom és funkcióm!",
+        color=0x57F287
+    )
+
+    embed.add_field(
+        name="📦 !backup",
+        value="Leállítja a szervert (ha fut), majd biztonsági mentést készít és menti iCloud Drive-ba.",
+        inline=False
+    )
+
+    embed.add_field(
+        name="🕓 Automatikus mentés",
+        value="Minden nap **22:00-kor** automatikusan biztonsági mentést indít.",
+        inline=False
+    )
+
+    embed.add_field(
+        name="🛑 !stop",
+        value="Leállítja a botot (csak tulaj használhatja).",
+        inline=False
+    )
+
+    embed.add_field(
+        name="🧩 !mod",
+        value="Link a modpack telepítőhöz (.exe formában).",
+        inline=False
+    )
+
+    embed.add_field(
+        name="📜 !modlist",
+        value="Felsorolja a modokat, amik a szerveren futnak.",
+        inline=False
+    )
+
+    embed.set_footer(text="WithTheBoys Minecraft Szerver bot – Powered by Sanyi 😼")
+
+    await ctx.send(embed=embed)
+
+@bot.command()
 async def backup(ctx):
     if ctx.author.id != 396322349236092930:
         await ctx.send("🚫 Csak a tulaj használhatja ezt a parancsot.")
