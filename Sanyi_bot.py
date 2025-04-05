@@ -6,7 +6,7 @@ import requests
 
 TOKEN = os.getenv("DISCORD_TOKEN")
 API_URL = "https://forecast-remember-titanium-alleged.trycloudflare.com/start-server"
-API_SECRET = "titkoskulcs"  # ezt cseréld ki ugyanarra, mint a Flask API-ban
+API_SECRET = "Fuq/Ak6Xm#uq?7xwW0vx20as:UtiGk)Q6m£*(xS%/.8B#Vi8,%"
 
 
 intents = discord.Intents.default()
@@ -17,6 +17,23 @@ bot = commands.Bot(command_prefix="!", intents=intents)
 @bot.event
 async def on_ready():
     print(f"Bejelentkezve mint: {bot.user}")
+
+@bot.command(name="szerverstatus")
+async def szerverstatus(ctx):
+    await ctx.send("🔎 Lekérdezem a szerver állapotát...")
+
+    try:
+        response = requests.get(API_URL.replace("/start-server", "/server-status"))
+        data = response.json()
+
+        if data["status"] == "running":
+            await ctx.send("🟢 A Minecraft szerver **fut**.")
+        elif data["status"] == "stopped":
+            await ctx.send("🔴 A Minecraft szerver **nem fut**.")
+        else:
+            await ctx.send(f"⚠️ Ismeretlen válasz: {data['message']}")
+    except Exception as e:
+        await ctx.send(f"❌ Hiba történt: {str(e)}")
 
 @bot.command(name="szerverstart")
 async def szerverstart(ctx):
