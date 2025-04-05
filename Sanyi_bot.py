@@ -30,6 +30,8 @@ async def szerverstart(ctx):
 
         if data["status"] == "success":
             await ctx.send("✅ Szerver elindítva!")
+        elif data["status"] == "info":
+            await ctx.send("ℹ️ A szerver már fut!")
         else:
             await ctx.send(f"❌ Hiba: {data['message']}")
     except Exception as e:
