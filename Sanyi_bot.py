@@ -14,7 +14,7 @@ from mcrcon import MCRcon
 TOKEN = os.getenv("DISCORD_TOKEN")
 API_URL = "https://cheat-collection-qualities-opposite.trycloudflare.com/start-server"
 API_SECRET = "Fuq/Ak6Xm#uq?7xwW0vx20as:UtiGk)Q6m£*(xS%/.8B#Vi8,%"
-RCON_HOST = "whittheboys.servegame.com"
+RCON_HOST = "withtheboys.servegame.com"
 RCON_PORT = 25575
 RCON_PASSWORD = "[r/4eLTVBOw9cV<[l*(Q£9(omkA`uXwEyTGtfe5`4}]OhfD!>3"
 
@@ -36,25 +36,106 @@ def is_java_running():
             return True
     return False
 
+async def run_backup(channel):
+    await channel.send("🔄 Backup indítása...")
+
+    # RCON-on keresztül ellenőrizzük, hogy a szerver fut-e
+    server_running = False
+    try:
+        with MCRcon(RCON_HOST, RCON_PASSWORD, port=RCON_PORT) as mcr:
+            response = mcr.command("list")
+            server_running = True
+    except Exception:
+        server_running = False
+
+    if server_running:
+        # 5 perces figyelmeztetés
+        await channel.send("⏰ A szerver backup miatt 5 percen belül leáll!")
+        try:
+            with MCRcon(RCON_HOST, RCON_PASSWORD, port=RCON_PORT) as mcr:
+                mcr.command("say A szerver 5 percen belül backup miatt leáll!")
+        except Exception as e:
+            await channel.send(f"❌ Hiba az RCON figyelmeztetés során: {e}")
+            return
+
+        # Várjunk 4 percet (240 mp)
+        await asyncio.sleep(240)
+
+        # 1 perces figyelmeztetés
+        await channel.send("⏰ A szerver 1 perc múlva backup miatt leáll!")
+        try:
+            with MCRcon(RCON_HOST, RCON_PASSWORD, port=RCON_PORT) as mcr:
+                mcr.command("say A szerver 1 perc múlva backup miatt leáll!")
+        except Exception as e:
+            await channel.send(f"❌ Hiba az RCON figyelmeztetés során: {e}")
+            return
+
+        # Várjunk még 50 mp-t
+        await asyncio.sleep(50)
+
+        # Opcionális visszaszámlálás 10-től 1-ig
+        for i in range(10, 0, -1):
+            try:
+                with MCRcon(RCON_HOST, RCON_PASSWORD, port=RCON_PORT) as mcr:
+                    mcr.command(f"say {i}")
+            except Exception as e:
+                await channel.send(f"❌ Hiba a visszaszámlálás során: {e}")
+                return
+            await asyncio.sleep(1)
+
+        # Szerver leállítása
+        try:
+            with MCRcon(RCON_HOST, RCON_PASSWORD, port=RCON_PORT) as mcr:
+                mcr.command("stop")
+        except Exception as e:
+            await channel.send(f"❌ Hiba a szerver leállításakor: {e}")
+            return
+
+        await channel.send("✅ Szerver leállítva backup miatt!")
+    else:
+        await channel.send("ℹ️ A szerver már le volt állítva – nem kell leállítani.")
+
+    # Aszinkron módon futtatjuk a backup scriptet
+    await channel.send("🔄 Backup script futtatása...")
+    try:
+        process = await asyncio.create_subprocess_exec(
+            "python", "C:\\Users\\koppa\\Documents\\Scripts\\minecraft_backup.py",
+            stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
+        )
+        stdout, stderr = await process.communicate()
+        if process.returncode == 0:
+            await channel.send("✅ Backup kész!")
+        else:
+            error_msg = stderr.decode().strip()
+            await channel.send(f"❌ Backup hiba: {error_msg}")
+    except Exception as e:
+        await channel.send(f"❌ Hiba a backup futtatása közben: {e}")
+
+
+@bot.command()
+async def backup(ctx):
+    if ctx.author.id != 396322349236092930:
+        await ctx.send("🚫 Csak a tulaj használhatja ezt a parancsot.")
+        return
+
+    await run_backup(ctx.channel)
+
+
+# Az automatikus backup ütemezése minden nap 22:00-kor:
 async def auto_backup():
+    # Például itt az 1358096800686281047-es csatornába küldünk üzenetet;
+    # cseréld le a megfelelő csatorna ID-ra!
     channel = bot.get_channel(1358096800686281047)
     if channel:
-        await channel.send("🕓 Automatikus backup indult (22:00)")
+        await run_backup(channel)
 
-    if is_java_running():
-        if channel:
-            await channel.send("🔻 Szerver fut – leállítás...")
-        subprocess.run(["taskkill", "/IM", "java.exe", "/F"])
-        await channel.send("⏳ Várakozás 60 mp a teljes leálláshoz...")
-        time.sleep(60)
-    else:
-        if channel:
-            await channel.send("ℹ️ A szerver már le volt állítva – nem kell leállítani.")
 
-    subprocess.run(["python", "C:\\Users\\koppa\\Documents\\Scripts\\minecraft_backup.py"])
+@bot.event
+async def on_ready():
+    print(f"Bejelentkezve mint: {bot.user}")
+    scheduler.add_job(auto_backup, CronTrigger(hour=22, minute=0))
+    scheduler.start()
 
-    if channel:
-        await channel.send("✅ Backup kész! A mentés az iCloud Drive-ban van.")
 
 @bot.command(name="autoleall")
 async def autoleall(ctx):
@@ -111,85 +192,23 @@ async def autoleall(ctx):
         return
 
     await ctx.send("✅ Szerver leállítva!")
-    
-@bot.command()
-async def command(ctx):
-    embed = discord.Embed(
-        title="🤖 Sanyi – WithTheBoys Discord Bot",
-        description="Itt van minden parancsom és funkcióm!",
-        color=0x57F287
-    )
-
-    embed.add_field(
-        name="📦 !backup",
-        value="Leállítja a szervert (ha fut), majd biztonsági mentést készít és menti iCloud Drive-ba.",
-        inline=False
-    )
-
-    embed.add_field(
-        name="🕓 Automatikus mentés",
-        value="Minden nap **22:00-kor** automatikusan biztonsági mentést indít.",
-        inline=False
-    )
-
-    embed.add_field(
-        name="🛑 !stop",
-        value="Leállítja a botot (csak tulaj használhatja).",
-        inline=False
-    )
-
-    embed.add_field(
-        name="🧩 !mod",
-        value="Link a modpack telepítőhöz (.exe formában).",
-        inline=False
-    )
-
-    embed.add_field(
-        name="📜 !modlist",
-        value="Felsorolja a modokat, amik a szerveren futnak.",
-        inline=False
-    )
-
-    embed.set_footer(text="WithTheBoys Minecraft Szerver bot – Powered by Sanyi 😼")
-
-    await ctx.send(embed=embed)
-
-@bot.command()
-async def backup(ctx):
-    if ctx.author.id != 396322349236092930:
-        await ctx.send("🚫 Csak a tulaj használhatja ezt a parancsot.")
-        return
-
-    await ctx.send("🔄 Manuális backup indítása...")
-
-    if is_java_running():
-        await ctx.send("🔻 Szerver fut – leállítás...")
-        subprocess.run(["taskkill", "/IM", "java.exe", "/F"])
-        await ctx.send("⏳ Várakozás 60 mp a teljes leálláshoz...")
-        time.sleep(60)
-    else:
-        await ctx.send("ℹ️ A szerver már le volt állítva – nem kell leállítani.")
-
-    subprocess.run(["python", "C:\\Users\\koppa\\Documents\\Scripts\\minecraft_backup.py"])
-    await ctx.send("✅ Backup kész!")
-
 
 @bot.command(name="szerverstatus")
 async def szerverstatus(ctx):
-    await ctx.send("🔎 Lekérdezem a szerver állapotát...")
-
+    await ctx.send("🔎 Lekérdezem a szerver állapotát RCON-on keresztül...")
     try:
-        response = requests.get(API_URL.replace("/start-server", "/server-status"))
-        data = response.json()
-
-        if data["status"] == "running":
-            await ctx.send("🟢 A Minecraft szerver **fut**.")
-        elif data["status"] == "stopped":
+        with MCRcon(RCON_HOST, RCON_PASSWORD, port=RCON_PORT) as mcr:
+            # A "list" parancs visszaadja a játékosok listáját, ami alapján eldönthető, hogy a szerver fut.
+            response = mcr.command("list")
+        # Ha a fenti parancs sikeres volt, akkor a szerver fut.
+        await ctx.send(f"🟢 A Minecraft szerver **fut**. Válasz: {response}")
+    except Exception as e:
+        # Ha a kapcsolódás nem sikerül (például Connection refused), akkor feltételezhetjük, hogy a szerver nem fut.
+        if "Connection refused" in str(e):
             await ctx.send("🔴 A Minecraft szerver **nem fut**.")
         else:
-            await ctx.send(f"⚠️ Ismeretlen válasz: {data['message']}")
-    except Exception as e:
-        await ctx.send(f"❌ Hiba történt: {str(e)}")
+            await ctx.send(f"❌ Hiba történt: {e}")
+
 
 @bot.command(name="szerverstart")
 async def szerverstart(ctx):
@@ -236,5 +255,47 @@ async def stopping_bot(ctx):
 
     await ctx.send("👋 Bot leáll... Viszlát!")
     await bot.close()
+
+@bot.command()
+async def command(ctx):
+    embed = discord.Embed(
+        title="🤖 Sanyi – WithTheBoys Discord Bot",
+        description="Itt van minden parancsom és funkcióm!",
+        color=0x57F287
+    )
+
+    embed.add_field(
+        name="📦 !backup",
+        value="Leállítja a szervert (ha fut), majd biztonsági mentést készít és menti iCloud Drive-ba.",
+        inline=False
+    )
+
+    embed.add_field(
+        name="🕓 Automatikus mentés",
+        value="Minden nap **22:00-kor** automatikusan biztonsági mentést indít.",
+        inline=False
+    )
+
+    embed.add_field(
+        name="🛑 !stop",
+        value="Leállítja a botot (csak tulaj használhatja).",
+        inline=False
+    )
+
+    embed.add_field(
+        name="🧩 !mod",
+        value="Link a modpack telepítőhöz (.exe formában).",
+        inline=False
+    )
+
+    embed.add_field(
+        name="📜 !modlist",
+        value="Felsorolja a modokat, amik a szerveren futnak.",
+        inline=False
+    )
+
+    embed.set_footer(text="WithTheBoys Minecraft Szerver bot – Powered by Sanyi 😼")
+
+    await ctx.send(embed=embed)
 
 bot.run(TOKEN)
