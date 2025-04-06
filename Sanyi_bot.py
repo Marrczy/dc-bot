@@ -259,43 +259,62 @@ async def stopping_bot(ctx):
 @bot.command()
 async def command(ctx):
     embed = discord.Embed(
-        title="🤖 Sanyi – WithTheBoys Discord Bot",
-        description="Itt van minden parancsom és funkcióm!",
+        title="🤖 Sanyi – WithTheBoys Discord Bot parancsok",
+        description="Itt találod az összes elérhető parancsom és funkcióm:",
         color=0x57F287
     )
 
     embed.add_field(
         name="📦 !backup",
-        value="Leállítja a szervert (ha fut), majd biztonsági mentést készít és menti iCloud Drive-ba.",
+        value=("Leállítja a szervert (ha fut) backup miatt, majd aszinkron módon futtatja a backup scriptet. "
+               "Figyelmezteti a játékosokat 5 és 1 perccel előtte, visszaszámlálás után leállítja a szervert."),
         inline=False
     )
 
     embed.add_field(
         name="🕓 Automatikus mentés",
-        value="Minden nap **22:00-kor** automatikusan biztonsági mentést indít.",
+        value="Minden nap **22:00-kor** automatikusan backupot készít az ütemezett backup funkció segítségével.",
+        inline=False
+    )
+
+    embed.add_field(
+        name="⏱ !autoleall",
+        value=("Szerver leállítás backup miatt: 5 perces és 1 perces figyelmeztetések után visszaszámlálás, "
+               "majd RCON-on keresztül leállítja a szervert."),
+        inline=False
+    )
+
+    embed.add_field(
+        name="🔎 !szerverstatus",
+        value="Lekérdezi a szerver állapotát RCON-on keresztül.",
+        inline=False
+    )
+
+    embed.add_field(
+        name="🚀 !szerverstart",
+        value="Elindítja a szervert egy API hívással, ha a szerver még nem fut.",
+        inline=False
+    )
+
+    embed.add_field(
+        name="🧩 !modlist",
+        value="Felsorolja a szerveren telepített modokat.",
+        inline=False
+    )
+
+    embed.add_field(
+        name="🔧 !mod",
+        value="Letöltési link a modpack telepítőhöz (.exe formában).",
         inline=False
     )
 
     embed.add_field(
         name="🛑 !stop",
-        value="Leállítja a botot (csak tulaj használhatja).",
-        inline=False
-    )
-
-    embed.add_field(
-        name="🧩 !mod",
-        value="Link a modpack telepítőhöz (.exe formában).",
-        inline=False
-    )
-
-    embed.add_field(
-        name="📜 !modlist",
-        value="Felsorolja a modokat, amik a szerveren futnak.",
+        value="Leállítja a botot (csak a tulaj használhatja).",
         inline=False
     )
 
     embed.set_footer(text="WithTheBoys Minecraft Szerver bot – Powered by Sanyi 😼")
-
     await ctx.send(embed=embed)
 
 bot.run(TOKEN)
