@@ -93,7 +93,7 @@ async def run_backup(channel):
 
         await channel.send("✅ Szerver leállítva backup miatt!")
     else:
-        await channel.send("ℹ️ A szerver már le volt állítva – nem kell leállítani.")
+        await channel.send("ℹ️ A szerver nem fut, így nem kell leállítani.")
 
     # Aszinkron módon futtatjuk a backup scriptet
     await channel.send("🔄 Backup script futtatása...")
@@ -110,7 +110,6 @@ async def run_backup(channel):
             await channel.send(f"❌ Backup hiba: {error_msg}")
     except Exception as e:
         await channel.send(f"❌ Hiba a backup futtatása közben: {e}")
-
 
 @bot.command()
 async def backup(ctx):
